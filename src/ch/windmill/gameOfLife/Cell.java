@@ -5,7 +5,7 @@
  */
 package ch.windmill.gameOfLife;
 
-/**
+/** 
  *
  * @author Cyrill Jauner
  */
