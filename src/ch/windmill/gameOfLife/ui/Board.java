@@ -20,16 +20,16 @@ public class Board {
      * 
      */
     public Board() {
-        xAxis = 3;
-        yAxis = 3;
+        xAxis = 100;
+        yAxis = 100;
         world = new World(xAxis, xAxis);
         
         initializeUI();
         window.setVisible(true);
         
-        for(int i = 0; i < 10; i++) {
+        while(true) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
                 world.startEngine();
                 window.repaint();
             } catch (InterruptedException ex) {

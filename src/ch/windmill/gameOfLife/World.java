@@ -81,8 +81,20 @@ public class World {
             }
         }
         
-        map[1][1].setAlive(true);
+        /**map[1][1].setAlive(true);
         map[0][1].setAlive(true);
         map[1][0].setAlive(true);
+        map[2][0].setAlive(true);
+        map[2][3].setAlive(true);*/
+        map[4][0].setAlive(true);
+        map[4][2].setAlive(true);
+        map[4][3].setAlive(true);
+        map[4][4].setAlive(true);
+        map[4][5].setAlive(true);
+        map[4][6].setAlive(true);
+        map[4][7].setAlive(true);
+        map[4][8].setAlive(true);
+        map[4][9].setAlive(true);
+        map[4][1].setAlive(true);
     }
 }
