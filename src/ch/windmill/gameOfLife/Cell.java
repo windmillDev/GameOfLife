@@ -1,43 +1,51 @@
 package ch.windmill.gameOfLife;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import javax.swing.JPanel;
+
 /**
  *
  * @author Cyrill Jauner
  * @version 1.0.0
  */
 public class Cell {
-    private State state;
     private boolean isAlive;
+    private JPanel panel;
     
     /**
      * 
      */
     public Cell() {
-        state = State.DEAD;
-        isAlive = false;
+        this(false);
+    }
+    
+    public Cell(final boolean isAlive) {
+        this.isAlive = isAlive;
+        panel = new JPanel();
+        panel.setPreferredSize(new Dimension(10, 10));
+        panel.setBackground(Color.red);
     }
     
     public boolean isAlive() {
         return isAlive;
     }
     
-    public void setAlive() {
-        isAlive = true;
+    public JPanel getPanel() {
+        return panel;
     }
     
-    /**
-     * 
-     * @return 
-     */
-    public State getState() {
-        return state;
+    public void setAlive(final boolean isAlive) {
+        this.isAlive = isAlive;
+        
+        if(isAlive) {
+            panel.setBackground(Color.green);
+        } else {
+            panel.setBackground(Color.red);
+        }
     }
     
-    /**
-     * 
-     * @param state 
-     */
-    public void setState(State state) {
-        this.state = state;
+    public void setField(final JPanel panel) {
+        this.panel = panel;
     }
 }

@@ -6,7 +6,7 @@ package ch.windmill.gameOfLife;
  * @version 1.0.0
  */
 public enum RuleSet {
-    CONWAY(new int[]{0}, new int[]{0});
+    CONWAY(new int[]{3}, new int[]{2,3});
     
     private int[] birth;
     private int[] remain;
