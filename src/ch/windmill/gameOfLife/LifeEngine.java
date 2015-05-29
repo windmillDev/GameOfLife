@@ -3,7 +3,9 @@ package ch.windmill.gameOfLife;
 import java.util.ArrayList;
 
 /**
- *
+ * This class provides the engine to evolve cells. A life engine needs rules to decide which cells
+ * will survive and which cells will be revived. All cells who doesnt pass the check will be dead in the
+ * next generation.
  * @author Cyrill Jauner
  * @version 1.0.0
  */
@@ -11,15 +13,16 @@ public class LifeEngine {
     private RuleSet rules;
     
     /**
-     * 
+     * Creates a new life engine object. This constructor invokes the main construchtor with the default 
+     * parameter <code>RuleSet.CONWAY</code>.
      */
     public LifeEngine() {
         this(RuleSet.CONWAY);
     }
     
     /**
-     * 
-     * @param rules 
+     * Creates a new life engine object.
+     * @param rules Set of rules to define the evolve process.
      */
     public LifeEngine(final RuleSet rules) {
         this.rules = rules;
@@ -27,20 +30,25 @@ public class LifeEngine {
     
     /**
      * 
-     * @return 
+     * @return Get the rules.
      */
     public RuleSet getRules() {
         return rules;
     }
     
     /**
-     * 
-     * @param rules 
+     * Set a new ruleset.
+     * @param rules The reference to the ruleset.
      */
     public void setRules(RuleSet rules) {
         this.rules = rules;
     }
     
+    /**
+     * 
+     * @param map
+     * @return 
+     */
     public boolean[][] evolve(final Cell[][] map) {
         boolean[][] newGen = new boolean[map.length][map[0].length];
         int countAlive = 0;
@@ -80,6 +88,13 @@ public class LifeEngine {
         return newGen;
     }
     
+    /**
+     * 
+     * @param map
+     * @param x
+     * @param y
+     * @return 
+     */
     private ArrayList<Cell> getNeighbours(final Cell[][] map, final int x, final int y) {
         ArrayList<Cell> n = new ArrayList<>();
         boolean up = false;

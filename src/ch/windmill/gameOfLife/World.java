@@ -13,8 +13,8 @@ public class World {
     private final int xAxis, yAxis;
     
     /**
-     * Creates a new world object. This constructor initialize the 2D cell array and create a cell for each
-     * place.
+     * Creates a new world object. This constructor invokes the main constructor with the given parameters
+     * and a <code>gameOfLife.LifeEngine</code> reference.
      * @param xAxis The horizontal size.
      * @param yAxis The vertical size.
      */
@@ -22,6 +22,13 @@ public class World {
         this(xAxis, yAxis, new LifeEngine());
     }
     
+    /**
+     * Creates a new world object. This constructor initialize the 2D cell array and create a cell for each
+     * place.
+     * @param xAxis The horizontal size.
+     * @param yAxis The vertical size.
+     * @param engine The engine to evolve cells.
+     */
     public World(final int xAxis, final int yAxis, LifeEngine engine) {
         this.xAxis = xAxis;
         this.yAxis = yAxis;
@@ -74,7 +81,8 @@ public class World {
     }
     
     /**
-     * Evolve the current generation of cells.
+     * Evolve the current generation of cells. Start the engine to calculate a new generation.
+     * After that, update the state of the cells.
      */
     public void startEngine() {
         boolean[][] newGen = engine.evolve(map);
@@ -90,6 +98,9 @@ public class World {
         }
     }
     
+    /**
+     * Print out the state of every cell to the console.
+     */
     public void printOutWorld() {
         for(int j = map.length-1; j >= 0; j--) {
             for(int i = 0; i < map[0].length; i++) {
@@ -100,9 +111,9 @@ public class World {
     }
     
     /**
-     * 
-     * @param axisX
-     * @param axisY 
+     * Create cell objects and save their references into the 2D cell array.
+     * @param axisX Length of the first dimension.
+     * @param axisY Length of the second dimension.
      */
     private void initializeMap(final int axisX, final int axisY) {
         for(int i = 0; i < axisX; i++) {
@@ -110,7 +121,7 @@ public class World {
                 map[i][j] = new Cell();
             }
         }
-        map[4][0].setAlive(true);
+        /**map[4][0].setAlive(true);
         map[4][2].setAlive(true);
         map[4][3].setAlive(true);
         map[4][4].setAlive(true);
@@ -119,6 +130,6 @@ public class World {
         map[4][7].setAlive(true);
         map[4][8].setAlive(true);
         map[4][9].setAlive(true);
-        map[4][1].setAlive(true);
+        map[4][1].setAlive(true);*/
     }
 }
