@@ -121,7 +121,7 @@ public class World {
                 map[i][j] = new Cell();
             }
         }
-        /**map[4][0].setAlive(true);
+        map[4][0].setAlive(true);
         map[4][2].setAlive(true);
         map[4][3].setAlive(true);
         map[4][4].setAlive(true);
@@ -130,6 +130,6 @@ public class World {
         map[4][7].setAlive(true);
         map[4][8].setAlive(true);
         map[4][9].setAlive(true);
-        map[4][1].setAlive(true);*/
+        map[4][1].setAlive(true);
     }
 }

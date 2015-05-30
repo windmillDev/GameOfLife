@@ -14,10 +14,10 @@ public class LifeEngine {
     
     /**
      * Creates a new life engine object. This constructor invokes the main construchtor with the default 
-     * parameter <code>RuleSet.CONWAY</code>.
+     * parameter <code>RuleSet.CORNWAY</code>.
      */
     public LifeEngine() {
-        this(RuleSet.CONWAY);
+        this(RuleSet.CORNWAY);
     }
     
     /**
@@ -45,39 +45,44 @@ public class LifeEngine {
     }
     
     /**
-     * 
-     * @param map
-     * @return 
+     * Calculate a new generation of cells. Every cell in the current generation will be checked. This method
+     * write the results into an boolean array. True means that the cell on this position is alive. Otherwise
+     * the cell is dead.
+     * @param map The current generation.
+     * @return The next generation.
      */
     public boolean[][] evolve(final Cell[][] map) {
         boolean[][] newGen = new boolean[map.length][map[0].length];
-        int countAlive = 0;
+        boolean right, left;
+        int countAlive, k;
         
-        for(int i = 0; i < map.length; i++) {
-            for(int j = 0; j < map[0].length; j++) {
+        for(int i = 0; i < map.length; i++) {                              // check the current generation (X axis)
+            right = false;
+            left = false;
+            if(i > 0 && i < map.length-1) {
+                right = true;
+                left = true;
+            } else if(i == 0) {
+                right = true;
+            }  else if(i == map.length -1) {
+                left = true;
+            }
+            
+            for(int j = 0; j < map[0].length; j++) {                       // check the current generation (Y axis)
                 newGen[i][j] = false;
-                countAlive = 0;
+                countAlive = countAliveNeighbours(map, i, j, right, left); // get the number of alive neighbours
                 
-                ArrayList<Cell> n = getNeighbours(map, i, j);
-                for(Cell c : n) {
-                    if(c.isAlive()) {
-                        countAlive++;
-                    }
-                }
-                
-                if(map[i][j].isAlive()) {
-                    for(int k = 0; k < rules.getRemain().length; k++) {
+                if(map[i][j].isAlive()) {                                  // the current cell is alive
+                    for(k = 0; k < rules.getRemain().length; k++) {
                         if(countAlive == rules.getRemain()[k]) {
                             newGen[i][j] = true;
-                            System.out.println("remain "+i+","+j+" "+countAlive);
                             break;
                         }
                     }
-                } else {
-                    for(int k = 0; k < rules.getBirth().length; k++) {
+                } else {                                                   // the current cell is dead
+                    for(k = 0; k < rules.getBirth().length; k++) {
                         if(countAlive == rules.getBirth()[k]) {
                             newGen[i][j] = true;
-                            System.out.println("birth of a cell "+i+","+j+" "+countAlive);
                             break;
                         }
                     }
@@ -89,11 +94,11 @@ public class LifeEngine {
     }
     
     /**
-     * 
-     * @param map
-     * @param x
-     * @param y
-     * @return 
+     * Get the references of all neighbour cells.
+     * @param map The current generation.
+     * @param x The current x position.
+     * @param y The current y position.
+     * @return Arraylist with references of the neighbours.
      */
     private ArrayList<Cell> getNeighbours(final Cell[][] map, final int x, final int y) {
         ArrayList<Cell> n = new ArrayList<>();
@@ -142,5 +147,71 @@ public class LifeEngine {
         }
         
         return n;
+    }
+    
+    /**
+     * Count all living neighbour cells. The algorithm checks every cell in the neighbourhood. The following
+     * graphic illustrates this calculation. The cell in the middle is the current cell to check.
+     * <br>
+     * |D|A|D|<br>
+     * |D|C|D|<br>
+     * |A|D|D|
+     * <br>
+     * 
+     * @param map The current generation.
+     * @param x The current x position.
+     * @param y The current y position.
+     * @param right If there are cells right of this cell.
+     * @param left If there are cells left of this cell.
+     * @return Number of living cells in the neighbourhood.
+     */
+    private int countAliveNeighbours(final Cell[][] map, final int x, final int y, final boolean right,
+            final boolean left) {
+        int alive = 0;
+        ArrayList<Cell> n = new ArrayList<>();
+        
+        if(right) {
+            n.add(map[x+1][y]); // right
+        }
+        if(left) {
+            n.add(map[x-1][y]); // left
+        }
+        
+        if(y > 0 && y < map[0].length-1) {
+            n.add(map[x][y+1]);         // up
+            n.add(map[x][y-1]);         // down
+            if(right) {
+                n.add(map[x+1][y+1]);   // up - right
+                n.add(map[x+1][y-1]);   // down - right
+            }
+            if(left) {
+                n.add(map[x-1][y+1]);   // up - left
+                n.add(map[x-1][y-1]);   // down - left
+            }
+        } else if(y == 0) {
+            n.add(map[x][y+1]);         // up
+            if(right) {
+                n.add(map[x+1][y+1]);   // up - right
+            }
+            if(left) {
+                n.add(map[x-1][y+1]);   // up - left
+            }
+        } else if(y == map[0].length -1) {
+            n.add(map[x][y-1]);         // down
+            if(right) {
+                n.add(map[x+1][y-1]);   // down - right
+            }
+            if(left) {
+                n.add(map[x-1][y-1]);   // down - left
+            }
+        }
+        
+        for(Cell c : n) {               // check each cell is its alive
+            if(c.isAlive()) {
+                alive++;
+            }
+        }
+        
+        return alive;
     }
 }
