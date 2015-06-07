@@ -1,5 +1,6 @@
 package ch.windmill.gameOfLife.ui;
 
+import ch.windmill.gameOfLife.RuleSet;
 import ch.windmill.gameOfLife.World;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -14,10 +15,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.JTextPane;
 
 /**
  *
@@ -26,8 +28,13 @@ import javax.swing.JTextPane;
  */
 public class MainWindow implements MouseListener{
     private final int xAxis, yAxis;
+    private final JComboBox comRules;
     private final World world;
+    private int generationCounter;
     private Thread evolveThread;
+    private ProcessState state;
+    private JButton btnClear;
+    private JLabel lblState, lblGeneration;
     private JFrame window;
     
     /**
@@ -36,16 +43,20 @@ public class MainWindow implements MouseListener{
      */
     @SuppressWarnings("ResultOfObjectAllocationIgnored")
     public static void main(String[] args) {
-        new MainWindow();
+        //new MainWindow();
+        new MainWindow2();
     }
     
     /**
      * 
      */
     public MainWindow() {
-        xAxis = 100;
-        yAxis = 100;
+        xAxis = 10;
+        yAxis = 10;
+        generationCounter = 0;
+        comRules = new JComboBox(RuleSet.values());
         world = new World(xAxis, xAxis);
+        state = ProcessState.STOPPED;
         
         initializeUI();
         window.setVisible(true);
@@ -59,43 +70,57 @@ public class MainWindow implements MouseListener{
         JPanel panelFields = new JPanel(new GridLayout(xAxis, yAxis));
         JPanel panelControl = new JPanel(new FlowLayout());
         JSeparator separator = new JSeparator(JSeparator.VERTICAL);
-        JTextPane paneState = new JTextPane();
         JButton btnStart = new JButton("Start");
         JButton btnStop = new JButton("Stop");
         JButton btnRandom = new JButton("Random");
-        JButton btnClear = new JButton("Clear");
+        btnClear = new JButton("Clear");
+        lblState = new JLabel();
+        lblGeneration = new JLabel();
         window = new JFrame("Game of life");
         
         separator.setPreferredSize(new Dimension(140, 2));
         separator.setBorder(BorderFactory.createLineBorder(Color.black));
         
-        addStartAction(btnStart, paneState);                                // buttons
-        addStopAction(btnStop, paneState);
+        // buttons
+        btnStart.setPreferredSize(new Dimension(80,18));
+        btnStop.setPreferredSize(new Dimension(80,18));
+        btnRandom.setPreferredSize(new Dimension(80,18));
+        btnClear.setPreferredSize(new Dimension(80,18));
+        
+        addStartAction(btnStart);
+        addStopAction(btnStop);
         addRandomPatternAction(btnRandom);
+        addClearAction(btnClear);
         
-        changeStateText(false, paneState);                                  // text
-        paneState.setEditable(false);
+        // labels
+        lblState.setText("Current state: "+state.getText());
+        lblGeneration.setText("Current generation: "+generationCounter);
         
-        panelFields.setPreferredSize(new Dimension(400, 400));              // panels
+        // panels
+        panelFields.setPreferredSize(new Dimension(400, 400));
         panelControl.setPreferredSize(new Dimension(150, 100));
         panelControl.setBorder(BorderFactory.createLineBorder(Color.black));
-        panelControl.add(paneState);
+        panelControl.add(lblState);
+        panelControl.add(lblGeneration);
         panelControl.add(btnStart);
         panelControl.add(btnStop);
         panelControl.add(separator);
+        panelControl.add(comRules);
         panelControl.add(btnRandom);
         panelControl.add(btnClear);
         
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);              // frame
+        // frame
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setLayout(new BorderLayout());
         window.add(panelFields, BorderLayout.CENTER);
         window.add(panelControl, BorderLayout.EAST);
         
-        for(int i = (world.getYAxis()-1); i >= 0; i--) {                    // add all fields to the frame
+        // add all fields to the frame
+        for(int i = (world.getYAxis()-1); i >= 0; i--) {
             for(int j = 0; j < world.getXAxis(); j++) {
-                world.getCell(i, j).getPanel().addMouseListener(this);      // add listener
+                /**world.getCell(i, j).getPanel().addMouseListener(this);      // add listener
                 panelFields.add(world.getCell(i, j).getPanel());            // add panel to the frame
-            }
+            */}
         }
         
         window.pack();
@@ -103,13 +128,13 @@ public class MainWindow implements MouseListener{
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        for(int i = 0; i < world.getXAxis(); i++) {
+        /**for(int i = 0; i < world.getXAxis(); i++) {
             for(int j = 0; j < world.getYAxis(); j++) {
                 if(e.getSource().equals(world.getCell(i, j).getPanel())) {
                     world.getCell(i, j).setAlive(true);
                 }
             }
-        }
+        }*/
     }
 
     @Override
@@ -124,28 +149,22 @@ public class MainWindow implements MouseListener{
     @Override
     public void mouseExited(MouseEvent e) { }
     
-    private void changeStateText(final boolean running, final JTextPane tp) {
-        if(running) {
-            tp.setText("Current state: "+ProcessState.RUNNING.getText());
-        } else {
-            tp.setText("Current state: "+ProcessState.STOPPED.getText());
-        }
-    }
     
-    private void addStartAction(final JButton b, final JTextPane tp) {
+    private void addStartAction(final JButton b) {
         b.addActionListener((ActionEvent e) -> {
             if(evolveThread == null) {
                 evolveThread = getEvolveThread();
             }
+            world.setEngineRules((RuleSet) comRules.getSelectedItem());
             evolveThread.start();
-            changeStateText(true, tp);
+            changeProcessState(true);
         });
     }
     
-    private void addStopAction(final JButton b, final JTextPane tp) {
+    private void addStopAction(final JButton b) {
         b.addActionListener((ActionEvent e) -> {
             evolveThread = null;
-            changeStateText(false, tp);
+            changeProcessState(false);
         });
     }
     
@@ -161,6 +180,21 @@ public class MainWindow implements MouseListener{
                     }
                 }
             }
+            window.repaint();
+        });
+    }
+    
+    private void addClearAction(final JButton b) {
+        b.addActionListener((ActionEvent e) -> {
+            if(state.equals(ProcessState.STOPPED)) {
+                for(int i = 0; i < xAxis; i++) {
+                    for(int j = 0; j < yAxis; j++) {
+                        world.getCell(i, j).setAlive(false);
+                    }
+                }
+                generationCounter = 0;
+                window.repaint();
+            }
         });
     }
     
@@ -168,13 +202,27 @@ public class MainWindow implements MouseListener{
         return evolveThread = new Thread(() -> {
             while(evolveThread == Thread.currentThread()) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                     world.startEngine();
+                    generationCounter++;
+                    lblGeneration.setText("Generation: "+generationCounter);
                     window.repaint();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
+    }
+    
+    private void changeProcessState(final boolean running) {
+        if(!running) {
+            btnClear.setEnabled(true);
+            lblState.setText("Current state: "+ProcessState.STOPPED.getText());
+            state = ProcessState.STOPPED;
+        } else {
+            btnClear.setEnabled(false);
+            lblState.setText("Current state: "+ProcessState.RUNNING.getText());
+            state = ProcessState.RUNNING;
+        }
     }
 }

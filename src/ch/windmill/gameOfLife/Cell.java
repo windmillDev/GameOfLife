@@ -1,21 +1,20 @@
 package ch.windmill.gameOfLife;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import javax.swing.JPanel;
+import java.awt.Graphics;
 
 /**
- * This class represents a single cell in the game of life. A cell can be alive or dead. It has a 
- * <code>swing.JPanel</code> object to show the state of the cell in a swing ui.
+ * This class represents a single cell in the game of life. A cell can be alive or dead.
  * @author Cyrill Jauner
  * @version 1.0.0
  */
 public class Cell {
-    private final static Color COLORDEAD = Color.black;
-    private final static Color COLORALIVE = Color.YELLOW;
+    public final static Color COLORDEAD = Color.white;
+    public final static Color COLORALIVE = Color.black;
     
     private boolean isAlive;
-    private JPanel panel;
+    private int size;
+    
     
     /**
      * Creates a new cell object. This constructor invokes the main constructor <code>Cell(false, 5)</code>.
@@ -27,14 +26,11 @@ public class Cell {
     /**
      * Creates a new cell object.
      * @param isAlive The living state of the cell.
-     * @param panelSize The size in pixels for the panel axis.
+     * @param size The size in pixels.
      */
-    public Cell(final boolean isAlive, final int panelSize) {
+    public Cell(final boolean isAlive, final int size) {
         this.isAlive = isAlive;
-        panel = new JPanel();
-        panel.setPreferredSize(new Dimension(panelSize, panelSize));
-        panel.setBackground(COLORDEAD);
-        
+        this.size = size;
     }
     
     /**
@@ -47,31 +43,34 @@ public class Cell {
     
     /**
      * 
-     * @return The reference to the jpanel object.
+     * @return The size in pixels.
      */
-    public JPanel getPanel() {
-        return panel;
+    public int getSize() {
+        return size;
     }
     
     /**
-     * Change the living state of the cell. This method changes the background color of the jpanel.
+     * Change the living state of the cell.
      * @param isAlive True to set the cell alive, false to set it dead.
      */
     public void setAlive(final boolean isAlive) {
         this.isAlive = isAlive;
-        
-        if(isAlive) {
-            panel.setBackground(COLORALIVE);
-        } else {
-            panel.setBackground(COLORDEAD);
-        }
     }
     
     /**
-     * Set the jpanel for the cell.
-     * @param panel The reference to a jpanel object.
+     * Draw a rectangle with the correct live state colour. This method uses the given graphics to
+     * draw a rectangle on the given position. If this cell is alive, the method uses the COLORALIVE value
+     * otherwise the COLORDEAD value. The size of the rectangle is the value of the field size.
+     * @param g The graphic context to draw to.
+     * @param x The x position.
+     * @param y The y position.
      */
-    public void setPanel(final JPanel panel) {
-        this.panel = panel;
+    public void draw(Graphics g, final int x, final int y) {
+        if(isAlive) {
+            g.setColor(COLORALIVE);
+        } else {
+            g.setColor(COLORDEAD);
+        }
+        g.fillRect(x, y, size-1, size-1);
     }
 }

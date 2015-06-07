@@ -1,5 +1,8 @@
 package ch.windmill.gameOfLife;
 
+import java.awt.Graphics;
+import java.util.Random;
+
 /**
  * This class provides the world in a game of life. The world has a 2D array of cells, this is the 
  * organism. It can start the life evolution with a <code>gameOfLife.LifeEngine</code>. The size of the world
@@ -10,7 +13,7 @@ package ch.windmill.gameOfLife;
 public class World {
     private LifeEngine engine;
     private final Cell[][] map;
-    private final int xAxis, yAxis;
+    private final int xAxis, yAxis, cellSize;
     
     /**
      * Creates a new world object. This constructor invokes the main constructor with the given parameters
@@ -19,27 +22,40 @@ public class World {
      * @param yAxis The vertical size.
      */
     public World(final int xAxis, final int yAxis) {
-        this(xAxis, yAxis, new LifeEngine());
+        this(xAxis, yAxis, 10, new LifeEngine());
     }
     
     /**
      * Creates a new world object. This constructor initialize the 2D cell array and create a cell for each
      * place.
-     * @param xAxis The horizontal size.
-     * @param yAxis The vertical size.
+     * @param height The horizontal size in pixels.
+     * @param width The vertical size in pixels.
+     * @param cellSize The size of the cell in pixels.
      * @param engine The engine to evolve cells.
      */
-    public World(final int xAxis, final int yAxis, LifeEngine engine) {
-        this.xAxis = xAxis;
-        this.yAxis = yAxis;
+    public World(final int height, final int width, final int cellSize, LifeEngine engine) {
+        this.cellSize = cellSize;
         this.engine = engine;
-        map = new Cell[xAxis][yAxis];
+        xAxis = height / cellSize;
+        yAxis = width / cellSize;
         
-        initializeMap(xAxis, yAxis);
+        map = new Cell[xAxis][yAxis];
+        initializeMap();
     }
     
     /**
-     * 
+     * Create cell objects and save their references into the 2D cell array.
+     */
+    private void initializeMap() {
+        for(int i = 0; i < xAxis; i++) {
+            for(int j = 0; j < yAxis; j++) {
+                map[i][j] = new Cell(false, cellSize);
+            }
+        }
+    }
+    
+    /**
+     * The size of the x axis.
      * @return The size of the x axis.
      */
     public int getXAxis() {
@@ -47,7 +63,7 @@ public class World {
     }
     
     /**
-     * 
+     * The size of the y axis.
      * @return The size of the y axis.
      */
     public int getYAxis() {
@@ -55,7 +71,15 @@ public class World {
     }
     
     /**
-     * 
+     * The size of the cells in pixels.
+     * @return The size of the cells in pixels.
+     */
+    public int getCellSize() {
+        return cellSize;
+    }
+    
+    /**
+     * Get the reference to the lifeengine object.
      * @return Get the reference to the lifeengine object.
      */
     public LifeEngine getEngine() {
@@ -73,16 +97,24 @@ public class World {
     }
     
     /**
-     * 
+     * The 2D array of cells.
      * @return The 2D array of cells.
      */
     public Cell[][] getMap() {
         return map;
     }
     
+    
+    /**
+     * Set the rules for the life engine.
+     * @param r Rule set.
+     */
+    public void setEngineRules(final RuleSet r) {
+        engine.setRules(r);
+    }
+    
     /**
      * Evolve the current generation of cells. Start the engine to calculate a new generation.
-     * After that, update the state of the cells.
      */
     public void startEngine() {
         boolean[][] newGen = engine.evolve(map);
@@ -99,37 +131,48 @@ public class World {
     }
     
     /**
-     * Print out the state of every cell to the console.
+     * Kill every cell of the current generation.
      */
-    public void printOutWorld() {
-        for(int j = map.length-1; j >= 0; j--) {
-            for(int i = 0; i < map[0].length; i++) {
-                System.out.print("|"+map[i][j].isAlive()+"|");
+    public void killGeneration() {
+        for(int i = 0; i < xAxis; i++) {
+            for(int j = 0; j < yAxis; j++) {
+                map[i][j].setAlive(false);
             }
-            System.out.println();
         }
     }
     
     /**
-     * Create cell objects and save their references into the 2D cell array.
-     * @param axisX Length of the first dimension.
-     * @param axisY Length of the second dimension.
+     * Create a random generation. The parameter value is the percentage of living cells. This value must be
+     * greater than 0.0f and lower or equal than 1.0f.
+     * @param percentAlive The percentage of living cells.
+     * @throws IllegalArgumentException Illegal percentage.
      */
-    private void initializeMap(final int axisX, final int axisY) {
-        for(int i = 0; i < axisX; i++) {
-            for(int j = 0; j < axisY; j++) {
-                map[i][j] = new Cell();
+    public void randomGeneration(final float percentAlive) throws IllegalArgumentException {
+        int aliveCells = (int) (xAxis*yAxis*percentAlive);
+        Random ran = new Random();
+        Cell c = null;
+        
+        if(percentAlive <= 1.0f || percentAlive > 0.0f) {
+            while(aliveCells > 0) {
+                if(!(c = getCell((int) (xAxis * ran.nextDouble()), (int) (yAxis * ran.nextDouble()))).isAlive()) {
+                    c.setAlive(true);
+                    aliveCells--;
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("The parameter must be greater than 0.0f and lower or equal 1.0f ");
+        }
+    }
+    
+    /**
+     * Draw each cell to the given graphics context.
+     * @param g The graphic context to draw to.
+     */
+    public void drawWorld(final Graphics g) {
+        for(int i = 0; i < xAxis; i++) {
+            for(int j = 0; j < yAxis; j++) {
+                map[i][j].draw(g, i*cellSize, j*cellSize);
             }
         }
-        map[4][0].setAlive(true);
-        map[4][2].setAlive(true);
-        map[4][3].setAlive(true);
-        map[4][4].setAlive(true);
-        map[4][5].setAlive(true);
-        map[4][6].setAlive(true);
-        map[4][7].setAlive(true);
-        map[4][8].setAlive(true);
-        map[4][9].setAlive(true);
-        map[4][1].setAlive(true);
     }
 }
