@@ -3,226 +3,291 @@ package ch.windmill.gameOfLife.ui;
 import ch.windmill.gameOfLife.RuleSet;
 import ch.windmill.gameOfLife.World;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.BorderFactory;
+import java.awt.event.MouseMotionListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 
 /**
- *
+ * This class provides the main window of the ui. It has a main method that will invoke the constructor of this
+ * class. 
  * @author Cyrill Jauner
  * @version 1.0.0
  */
-public class MainWindow implements MouseListener{
-    private final int xAxis, yAxis;
-    private final JComboBox comRules;
+public class MainWindow {
+    private final static int WIDTH = 600;
+    private final static int HEIGHT = 600;
+    private final static int CELLSIZE = 10;
+    private final static int WAITTIME = 100;
+    
+    private final JFrame frame;
     private final World world;
-    private int generationCounter;
+    private Canvas canvas;
+    private ControlPanel controlPanel;
     private Thread evolveThread;
-    private ProcessState state;
-    private JButton btnClear;
-    private JLabel lblState, lblGeneration;
-    private JFrame window;
     
     /**
-     * Main method to start the programm.
+     * Start the game of life application.
      * @param args Console line arguments.
      */
     @SuppressWarnings("ResultOfObjectAllocationIgnored")
     public static void main(String[] args) {
-        //new MainWindow();
-        new MainWindow2();
+        new MainWindow();
     }
     
     /**
-     * 
+     * Create a new game of life.
      */
     public MainWindow() {
-        xAxis = 10;
-        yAxis = 10;
-        generationCounter = 0;
-        comRules = new JComboBox(RuleSet.values());
-        world = new World(xAxis, xAxis);
-        state = ProcessState.STOPPED;
-        
-        initializeUI();
-        window.setVisible(true);
+        frame = new JFrame("Game of life");
+        world = new World(WIDTH, HEIGHT, CELLSIZE);
         evolveThread = getEvolveThread();
+        
+        initUI();
+        frame.setVisible(true);
     }
     
     /**
-     * 
+     * Initialize all ui components.
      */
-    private void initializeUI() {
-        JPanel panelFields = new JPanel(new GridLayout(xAxis, yAxis));
-        JPanel panelControl = new JPanel(new FlowLayout());
-        JSeparator separator = new JSeparator(JSeparator.VERTICAL);
-        JButton btnStart = new JButton("Start");
-        JButton btnStop = new JButton("Stop");
-        JButton btnRandom = new JButton("Random");
-        btnClear = new JButton("Clear");
-        lblState = new JLabel();
-        lblGeneration = new JLabel();
-        window = new JFrame("Game of life");
+    private void initUI() {
+        canvas = new Canvas();
+        controlPanel = new ControlPanel();
+        canvas.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         
-        separator.setPreferredSize(new Dimension(140, 2));
-        separator.setBorder(BorderFactory.createLineBorder(Color.black));
-        
-        // buttons
-        btnStart.setPreferredSize(new Dimension(80,18));
-        btnStop.setPreferredSize(new Dimension(80,18));
-        btnRandom.setPreferredSize(new Dimension(80,18));
-        btnClear.setPreferredSize(new Dimension(80,18));
-        
-        addStartAction(btnStart);
-        addStopAction(btnStop);
-        addRandomPatternAction(btnRandom);
-        addClearAction(btnClear);
-        
-        // labels
-        lblState.setText("Current state: "+state.getText());
-        lblGeneration.setText("Current generation: "+generationCounter);
-        
-        // panels
-        panelFields.setPreferredSize(new Dimension(400, 400));
-        panelControl.setPreferredSize(new Dimension(150, 100));
-        panelControl.setBorder(BorderFactory.createLineBorder(Color.black));
-        panelControl.add(lblState);
-        panelControl.add(lblGeneration);
-        panelControl.add(btnStart);
-        panelControl.add(btnStop);
-        panelControl.add(separator);
-        panelControl.add(comRules);
-        panelControl.add(btnRandom);
-        panelControl.add(btnClear);
-        
-        // frame
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setLayout(new BorderLayout());
-        window.add(panelFields, BorderLayout.CENTER);
-        window.add(panelControl, BorderLayout.EAST);
-        
-        // add all fields to the frame
-        for(int i = (world.getYAxis()-1); i >= 0; i--) {
-            for(int j = 0; j < world.getXAxis(); j++) {
-                /**world.getCell(i, j).getPanel().addMouseListener(this);      // add listener
-                panelFields.add(world.getCell(i, j).getPanel());            // add panel to the frame
-            */}
-        }
-        
-        window.pack();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        /**for(int i = 0; i < world.getXAxis(); i++) {
-            for(int j = 0; j < world.getYAxis(); j++) {
-                if(e.getSource().equals(world.getCell(i, j).getPanel())) {
-                    world.getCell(i, j).setAlive(true);
-                }
-            }
-        }*/
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) { }
-
-    @Override
-    public void mouseReleased(MouseEvent e) { }
-
-    @Override
-    public void mouseEntered(MouseEvent e) { }
-
-    @Override
-    public void mouseExited(MouseEvent e) { }
-    
-    
-    private void addStartAction(final JButton b) {
-        b.addActionListener((ActionEvent e) -> {
-            if(evolveThread == null) {
-                evolveThread = getEvolveThread();
-            }
-            world.setEngineRules((RuleSet) comRules.getSelectedItem());
-            evolveThread.start();
-            changeProcessState(true);
-        });
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setLayout(new BorderLayout());
+        frame.add(canvas, BorderLayout.CENTER);
+        frame.add(controlPanel, BorderLayout.EAST);
+        frame.pack();
     }
     
-    private void addStopAction(final JButton b) {
-        b.addActionListener((ActionEvent e) -> {
-            evolveThread = null;
-            changeProcessState(false);
-        });
-    }
-    
-    private void addRandomPatternAction(final JButton b) {
-        b.addActionListener((ActionEvent e) -> {
-            Random ran = new Random();
-            for(int i = 0; i < xAxis; i++) {
-                for(int j = 0; j < yAxis; j++) {
-                    if(ran.nextBoolean()) {
-                        world.getCell(i, j).setAlive(true);
-                    } else {
-                        world.getCell(i, j).setAlive(false);
-                    }
-                }
-            }
-            window.repaint();
-        });
-    }
-    
-    private void addClearAction(final JButton b) {
-        b.addActionListener((ActionEvent e) -> {
-            if(state.equals(ProcessState.STOPPED)) {
-                for(int i = 0; i < xAxis; i++) {
-                    for(int j = 0; j < yAxis; j++) {
-                        world.getCell(i, j).setAlive(false);
-                    }
-                }
-                generationCounter = 0;
-                window.repaint();
-            }
-        });
-    }
-    
+    /**
+     * Initialize a new evolving thread. This thread generates a new generation with the life engine. The thread
+     * will stop after the number of <code>WAITTIME</code> milliseconds.
+     * @return The evolve thread.
+     */
     private Thread getEvolveThread() {
         return evolveThread = new Thread(() -> {
             while(evolveThread == Thread.currentThread()) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(WAITTIME);
                     world.startEngine();
-                    generationCounter++;
-                    lblGeneration.setText("Generation: "+generationCounter);
-                    window.repaint();
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                    controlPanel.incCounter();
+                    canvas.repaint();
+                } catch (InterruptedException ex) { }
             }
         });
     }
     
-    private void changeProcessState(final boolean running) {
-        if(!running) {
-            btnClear.setEnabled(true);
-            lblState.setText("Current state: "+ProcessState.STOPPED.getText());
+    /**
+     * Provides a canvas panel to draw the cells onto.
+     */
+    private class Canvas extends JPanel implements MouseListener, MouseMotionListener{
+        
+        /**
+         * Create a new canvas object.
+         */
+        public Canvas() {
+            super();
+            addMouseListener(this);
+            addMouseMotionListener(this);
+        }
+        
+        /**
+         * Draw the whole world of cells onto the panel.
+         * @param g The graphics context.
+         */
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            world.drawWorld(g);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            world.getCell((e.getX() / world.getCellSize()), (e.getY() / world.getCellSize())).setAlive(true);
+            repaint();
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) { }
+
+        @Override
+        public void mouseReleased(MouseEvent e) { }
+
+        @Override
+        public void mouseEntered(MouseEvent e) { }
+
+        @Override
+        public void mouseExited(MouseEvent e) { }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            world.getCell((e.getX() / world.getCellSize()), (e.getY() / world.getCellSize())).setAlive(true);
+            repaint();
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) { }
+    }
+    
+    /**
+     * Provides a panel with components to control the game.
+     */
+    private class ControlPanel extends JPanel {
+        private final static int BTNWIDTH = 80;
+        private final static int BTNHEIGHT = 18;
+        
+        private JLabel lblProcessState, lblGeneration;
+        private JButton btnStart, btnStop, btnKill, btnRandom;
+        private JComboBox boxRules;
+        private ProcessState state;
+        private int generationCounter;
+        
+        /**
+         * Create a new control panel.
+         */
+        public ControlPanel() {
+            generationCounter = 0;
             state = ProcessState.STOPPED;
-        } else {
-            btnClear.setEnabled(false);
-            lblState.setText("Current state: "+ProcessState.RUNNING.getText());
-            state = ProcessState.RUNNING;
+            initUI();
+        }
+        
+        /**
+         * Increment the generation counter. Update the text of the label and repaint it.
+         */
+        public void incCounter() {
+            generationCounter++;
+            lblGeneration.setText("Generation: "+generationCounter);
+            lblGeneration.repaint();
+        }
+        
+        /**
+         * Initialize all ui components.
+         */
+        private void initUI() {
+            lblProcessState = new JLabel();
+            lblGeneration = new JLabel();
+            btnStart = new JButton("Start");
+            btnStop = new JButton("Stop");
+            btnKill = new JButton("Kill");
+            btnRandom = new JButton("Random");
+            boxRules = new JComboBox(RuleSet.values());
+            
+            // set the text of the labels
+            changeStateText(false);
+            setCounterToZero();
+            
+            // set the size of the buttons
+            btnStart.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
+            btnStop.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
+            btnKill.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
+            btnRandom.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
+            
+            // action listeners
+            addStartAction(btnStart, btnKill);
+            addStopAction(btnStop, btnKill);
+            addKillAction(btnKill);
+            addRandomAction(btnRandom);
+            
+            // configure the jframe
+            //setLayout(new FlowLayout());
+            setLayout(new GridLayout(0, 1));
+            setPreferredSize(new Dimension(150, 100));
+            add(lblProcessState);
+            add(lblGeneration);
+            add(boxRules);
+            add(btnStart);
+            add(btnStop);
+            add(btnKill);
+            add(btnRandom);
+        }
+        
+        /**
+         * Change the state of the evolve thread to running or stopped.
+         * @param running If the evolve thread is running.
+         */
+        private void changeStateText(final boolean running) {
+            if(running) {
+                state = ProcessState.RUNNING;
+            } else {
+                state = ProcessState.STOPPED;
+            }
+            lblProcessState.setText("Current state: "+state.getText());
+            lblProcessState.repaint();
+        }
+        
+        /**
+         * Add an actionlistener to start the evolve thread.
+         * @param b The button to add the actionlistener.
+         * @param bDisable The button to disable when the button b is clicked.
+         */
+        private void addStartAction(final JButton b, final JButton bDisable) {
+            b.addActionListener((ActionEvent e) -> {
+                if(evolveThread == null) {
+                    evolveThread = getEvolveThread();
+                }
+                world.setEngineRules((RuleSet) boxRules.getSelectedItem());
+                evolveThread.start();
+                changeStateText(true);
+                bDisable.setEnabled(false);
+            });
+        }
+        
+        /**
+         * Add an actionlistener to stop the evolve thread.
+         * @param b The button to add the actionlistener.
+         * @param bEnable The button to enable when the button b is clicked.
+         */
+        private void addStopAction(final JButton b, final JButton bEnable) {
+            b.addActionListener((ActionEvent e) -> {
+                evolveThread = null;
+                changeStateText(false);
+                bEnable.setEnabled(true);
+            });
+        }
+        
+        /**
+         * Add an actionlistener to kill the current generation.
+         * @param b The button to add the actionlistener.
+         */
+        private void addKillAction(final JButton b) {
+            b.addActionListener((ActionEvent e) -> {
+                world.killGeneration();
+                setCounterToZero();
+                canvas.repaint();
+            });
+        }
+        
+        /**
+         * Add an actionlistener set a random generation.
+         * @param b The button to add the actionlistener.
+         */
+        private void addRandomAction(final JButton b) {
+            b.addActionListener((ActionEvent e) -> {
+                world.killGeneration();
+                world.randomGeneration(0.2f);
+                canvas.repaint();
+            });
+        }
+        
+        /**
+         * Set the value of the generation counter to zero. Update the text of the label and repaint it.
+         */
+        private void setCounterToZero() {
+            lblGeneration.setText("Generation: "+(generationCounter = 0));
+            lblGeneration.repaint();
         }
     }
 }

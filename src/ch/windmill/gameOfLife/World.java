@@ -25,6 +25,10 @@ public class World {
         this(xAxis, yAxis, 10, new LifeEngine());
     }
     
+    public World(final int xAxis, final int yAxis, final int cellSize) {
+        this(xAxis, yAxis, cellSize, new LifeEngine());
+    }
+    
     /**
      * Creates a new world object. This constructor initialize the 2D cell array and create a cell for each
      * place.

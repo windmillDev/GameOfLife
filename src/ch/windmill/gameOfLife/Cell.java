@@ -9,7 +9,7 @@ import java.awt.Graphics;
  * @version 1.0.0
  */
 public class Cell {
-    public final static Color COLORDEAD = Color.white;
+    public final static Color COLORDEAD = Color.yellow;
     public final static Color COLORALIVE = Color.black;
     
     private boolean isAlive;
