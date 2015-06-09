@@ -4,7 +4,6 @@ import ch.windmill.gameOfLife.RuleSet;
 import ch.windmill.gameOfLife.World;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -26,7 +25,7 @@ import javax.swing.JPanel;
 public class MainWindow {
     private final static int WIDTH = 600;
     private final static int HEIGHT = 600;
-    private final static int CELLSIZE = 10;
+    private final static int CELLSIZE = 2;
     private final static int WAITTIME = 100;
     
     private final JFrame frame;
@@ -91,7 +90,7 @@ public class MainWindow {
     }
     
     /**
-     * Provides a canvas panel to draw the cells onto.
+     * Provides a canvas panel to draw the cells onto. It has listeners for click and drag events.
      */
     private class Canvas extends JPanel implements MouseListener, MouseMotionListener{
         
@@ -113,7 +112,11 @@ public class MainWindow {
             super.paintComponent(g);
             world.drawWorld(g);
         }
-
+        
+        /**
+         * Calculate which cell was clicked and set that cell alive.
+         * @param e Object reference with mouse informations.
+         */
         @Override
         public void mouseClicked(MouseEvent e) {
             world.getCell((e.getX() / world.getCellSize()), (e.getY() / world.getCellSize())).setAlive(true);
@@ -131,11 +134,14 @@ public class MainWindow {
 
         @Override
         public void mouseExited(MouseEvent e) { }
-
+        
+        /**
+         * Invokes the mouseClicked event.
+         * @param e Object reference with mouse informations.
+         */
         @Override
         public void mouseDragged(MouseEvent e) {
-            world.getCell((e.getX() / world.getCellSize()), (e.getY() / world.getCellSize())).setAlive(true);
-            repaint();
+            mouseClicked(e);
         }
 
         @Override
