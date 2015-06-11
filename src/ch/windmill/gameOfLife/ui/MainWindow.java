@@ -3,13 +3,16 @@ package ch.windmill.gameOfLife.ui;
 import ch.windmill.gameOfLife.RuleSet;
 import ch.windmill.gameOfLife.World;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -31,6 +34,9 @@ import javax.swing.event.ChangeListener;
 public class MainWindow {
     private final static int WIDTH = 600;
     private final static int HEIGHT = 600;
+    private final static int CONTROLPWIDTH = 200;
+    private final static int BTNWIDTH = 150;
+    private final static int BTNHEIGHT = 60;
     private final static int CELLSIZE = 2;
     private final static int WAITTIME = 100;
     
@@ -62,8 +68,8 @@ public class MainWindow {
     }
     
     /**
-     * 
-     * @param cellSize 
+     * Resize the world with a new cell size. This methods invokes the resize method of the world object.
+     * @param cellSize The new size of cells in pixels.
      */
     public void resizeWorld(final int cellSize) {
         world.resize(HEIGHT, WIDTH, cellSize);
@@ -79,6 +85,7 @@ public class MainWindow {
         
         canvas.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         controlPanel.setNumCellText(world.getNumberOfCells());
+        controlPanel.setPreferredSize(new Dimension(CONTROLPWIDTH, HEIGHT));
         
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -170,10 +177,8 @@ public class MainWindow {
      * Provides a panel with components to control the game.
      */
     private class ControlPanel extends JPanel {
-        private final static int BTNWIDTH = 80;
-        private final static int BTNHEIGHT = 18;
-        
-        private JLabel lblProcessState, lblGeneration, lblAliveCells, lblNumCells;
+        private JPanel pInfo;
+        private JLabel lblProcessState, lblGeneration, lblAliveCells, lblNumCells, lblPercentage, lblCellSize;
         private JButton btnStart, btnStop, btnKill, btnRandom;
         private JComboBox boxRules;
         private JSpinner spPercentageAlive;
@@ -217,14 +222,17 @@ public class MainWindow {
          * Initialize all ui components.
          */
         private void initUI() {
+            pInfo = new JPanel();
             lblProcessState = new JLabel();
-            lblGeneration = new JLabel();
             lblAliveCells = new JLabel();
             lblNumCells = new JLabel();
+            lblGeneration = new JLabel();
+            lblPercentage = new JLabel(" live quote: ");
+            lblCellSize  = new JLabel("Cell size (pixels): ");
             btnStart = new JButton("Start");
             btnStop = new JButton("Stop");
             btnKill = new JButton("Kill");
-            btnRandom = new JButton("Random");
+            btnRandom = new JButton("Random generation");
             boxRules = new JComboBox(RuleSet.values());
             spPercentageAlive = new JSpinner();
             slCellSize = new JSlider(JSlider.HORIZONTAL);
@@ -234,13 +242,11 @@ public class MainWindow {
             drawGenerationText();
             drawAliveCellText(0);
             
-            // set the size of the buttons
-            btnStart.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
-            btnStop.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
-            btnKill.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
+            // buttons
+            btnStart.setPreferredSize(new Dimension(BTNWIDTH/2-2, BTNHEIGHT));
+            btnStop.setPreferredSize(new Dimension(BTNWIDTH/2-2, BTNHEIGHT));
             btnRandom.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
-            
-            // action listeners
+            btnKill.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
             addStartAction(btnStart, btnKill);
             addStopAction(btnStop, btnKill);
             addKillAction(btnKill);
@@ -260,20 +266,31 @@ public class MainWindow {
             slCellSize.setSnapToTicks(true);
             slCellSize.addChangeListener(new SliderListener());
             
-            // configure the jframe
-            setLayout(new GridLayout(0, 1));
-            setPreferredSize(new Dimension(150, 100));
-            add(lblProcessState);
-            add(lblGeneration);
-            add(lblNumCells);
-            add(lblAliveCells);
+            // combobox
+            boxRules.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT/2));
+            
+            // configure panels
+            pInfo.setLayout(new GridLayout(0, 1));
+            pInfo.setBorder(BorderFactory.createTitledBorder("Info"));
+            pInfo.add(lblProcessState);
+            pInfo.add(lblNumCells);
+            pInfo.add(lblAliveCells);
+            pInfo.add(lblGeneration);
+            
+            // configure the main panel
+            setLayout(new FlowLayout(FlowLayout.CENTER));
+            setBorder(BorderFactory.createLineBorder(Color.black));
+            add(pInfo);
+            add(lblCellSize);
             add(slCellSize);
             add(boxRules);
             add(btnStart);
             add(btnStop);
             add(btnKill);
+            add(lblPercentage);
             add(spPercentageAlive);
             add(btnRandom);
+
         }
         
         /**
@@ -289,7 +306,7 @@ public class MainWindow {
          * @param state The current state of the evolve thread.
          */
         private void drawProcessStateText(final ProcessState state) {
-            lblProcessState.setText("Current state: "+state.getText());
+            lblProcessState.setText("Engine state: "+state.getText());
             lblProcessState.repaint();
         }
         
@@ -361,6 +378,7 @@ public class MainWindow {
             JSlider s = (JSlider) e.getSource();
             if(!s.getValueIsAdjusting()) {          // user doesnt move the cursor
                 resizeWorld(s.getValue());
+                controlPanel.setNumCellText(world.getNumberOfCells());
             }
         }
         
