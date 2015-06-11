@@ -15,6 +15,12 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * This class provides the main window of the ui. It has a main method that will invoke the constructor of this
@@ -56,12 +62,23 @@ public class MainWindow {
     }
     
     /**
+     * 
+     * @param cellSize 
+     */
+    public void resizeWorld(final int cellSize) {
+        world.resize(HEIGHT, WIDTH, cellSize);
+        canvas.repaint();
+    }
+    
+    /**
      * Initialize all ui components.
      */
     private void initUI() {
         canvas = new Canvas();
         controlPanel = new ControlPanel();
+        
         canvas.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        controlPanel.setNumCellText(world.getNumberOfCells());
         
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -83,6 +100,7 @@ public class MainWindow {
                     Thread.sleep(WAITTIME);
                     world.startEngine();
                     controlPanel.incCounter();
+                    controlPanel.drawAliveCellText(world.countAliveCells());
                     canvas.repaint();
                 } catch (InterruptedException ex) { }
             }
@@ -155,10 +173,11 @@ public class MainWindow {
         private final static int BTNWIDTH = 80;
         private final static int BTNHEIGHT = 18;
         
-        private JLabel lblProcessState, lblGeneration;
+        private JLabel lblProcessState, lblGeneration, lblAliveCells, lblNumCells;
         private JButton btnStart, btnStop, btnKill, btnRandom;
         private JComboBox boxRules;
-        private ProcessState state;
+        private JSpinner spPercentageAlive;
+        private JSlider slCellSize;
         private int generationCounter;
         
         /**
@@ -166,7 +185,6 @@ public class MainWindow {
          */
         public ControlPanel() {
             generationCounter = 0;
-            state = ProcessState.STOPPED;
             initUI();
         }
         
@@ -175,8 +193,24 @@ public class MainWindow {
          */
         public void incCounter() {
             generationCounter++;
-            lblGeneration.setText("Generation: "+generationCounter);
-            lblGeneration.repaint();
+            drawGenerationText();
+        }
+        
+        /**
+         * Set the text of the num cell label.
+         * @param n Number of cells.
+         */
+        public void setNumCellText(final int n) {
+            lblNumCells.setText("Number of Cells: "+n);
+        }
+        
+        /**
+         * Draw the text of the alive cell label. Invoke the repaint method to redraw it.
+         * @param n Number of alive cells.
+         */
+        public void drawAliveCellText(final int n) {
+            lblAliveCells.setText("Alive cells: "+n);
+            lblAliveCells.repaint();
         }
         
         /**
@@ -185,15 +219,20 @@ public class MainWindow {
         private void initUI() {
             lblProcessState = new JLabel();
             lblGeneration = new JLabel();
+            lblAliveCells = new JLabel();
+            lblNumCells = new JLabel();
             btnStart = new JButton("Start");
             btnStop = new JButton("Stop");
             btnKill = new JButton("Kill");
             btnRandom = new JButton("Random");
             boxRules = new JComboBox(RuleSet.values());
+            spPercentageAlive = new JSpinner();
+            slCellSize = new JSlider(JSlider.HORIZONTAL);
             
             // set the text of the labels
-            changeStateText(false);
-            setCounterToZero();
+            drawProcessStateText(ProcessState.STOPPED);
+            drawGenerationText();
+            drawAliveCellText(0);
             
             // set the size of the buttons
             btnStart.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
@@ -207,29 +246,49 @@ public class MainWindow {
             addKillAction(btnKill);
             addRandomAction(btnRandom);
             
+            // spinner
+            SpinnerModel model = new SpinnerNumberModel(0.2, 0.1, 1.0, 0.1);
+            spPercentageAlive.setModel(model);
+            
+            // slider
+            slCellSize.setMinimum(2);
+            slCellSize.setMaximum(10);
+            slCellSize.setValue(2);
+            slCellSize.setMajorTickSpacing(1);
+            slCellSize.setPaintLabels(true);
+            slCellSize.setPaintTicks(true);
+            slCellSize.setSnapToTicks(true);
+            slCellSize.addChangeListener(new SliderListener());
+            
             // configure the jframe
-            //setLayout(new FlowLayout());
             setLayout(new GridLayout(0, 1));
             setPreferredSize(new Dimension(150, 100));
             add(lblProcessState);
             add(lblGeneration);
+            add(lblNumCells);
+            add(lblAliveCells);
+            add(slCellSize);
             add(boxRules);
             add(btnStart);
             add(btnStop);
             add(btnKill);
+            add(spPercentageAlive);
             add(btnRandom);
         }
         
         /**
-         * Change the state of the evolve thread to running or stopped.
-         * @param running If the evolve thread is running.
+         * Set the text of the generation label. Invoke the repaint method of the jlabel.
          */
-        private void changeStateText(final boolean running) {
-            if(running) {
-                state = ProcessState.RUNNING;
-            } else {
-                state = ProcessState.STOPPED;
-            }
+        private void drawGenerationText() {
+            lblGeneration.setText("Generation: "+generationCounter);
+            lblGeneration.repaint();
+        }
+        
+        /**
+         * Set the text of the process state label. Invoke the repaint method of the jlabel.
+         * @param state The current state of the evolve thread.
+         */
+        private void drawProcessStateText(final ProcessState state) {
             lblProcessState.setText("Current state: "+state.getText());
             lblProcessState.repaint();
         }
@@ -246,7 +305,7 @@ public class MainWindow {
                 }
                 world.setEngineRules((RuleSet) boxRules.getSelectedItem());
                 evolveThread.start();
-                changeStateText(true);
+                drawProcessStateText(ProcessState.RUNNING);
                 bDisable.setEnabled(false);
             });
         }
@@ -259,7 +318,7 @@ public class MainWindow {
         private void addStopAction(final JButton b, final JButton bEnable) {
             b.addActionListener((ActionEvent e) -> {
                 evolveThread = null;
-                changeStateText(false);
+                drawProcessStateText(ProcessState.STOPPED);
                 bEnable.setEnabled(true);
             });
         }
@@ -271,29 +330,39 @@ public class MainWindow {
         private void addKillAction(final JButton b) {
             b.addActionListener((ActionEvent e) -> {
                 world.killGeneration();
-                setCounterToZero();
+                generationCounter = 0;
+                drawGenerationText();
+                drawAliveCellText(0);
                 canvas.repaint();
             });
         }
         
         /**
-         * Add an actionlistener set a random generation.
+         * Add an actionlistener set a random generation. The random generation will override the existing 
+         * generation. The generation counter will be reseted.
          * @param b The button to add the actionlistener.
          */
         private void addRandomAction(final JButton b) {
             b.addActionListener((ActionEvent e) -> {
                 world.killGeneration();
-                world.randomGeneration(0.2f);
+                world.randomGeneration(Double.parseDouble(spPercentageAlive.getValue().toString()));
+                drawAliveCellText(world.countAliveCells());
+                generationCounter = 0;
+                drawGenerationText();
                 canvas.repaint();
             });
         }
-        
-        /**
-         * Set the value of the generation counter to zero. Update the text of the label and repaint it.
-         */
-        private void setCounterToZero() {
-            lblGeneration.setText("Generation: "+(generationCounter = 0));
-            lblGeneration.repaint();
+    }
+    
+    private class SliderListener implements ChangeListener {
+
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            JSlider s = (JSlider) e.getSource();
+            if(!s.getValueIsAdjusting()) {          // user doesnt move the cursor
+                resizeWorld(s.getValue());
+            }
         }
+        
     }
 }
