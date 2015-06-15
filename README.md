@@ -1,3 +1,2 @@
 # GameOfLife
-Cornways Game of life
-Game of life application.
+Cornways Game of life java application.
