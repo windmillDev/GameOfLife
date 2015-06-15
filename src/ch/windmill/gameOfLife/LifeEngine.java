@@ -170,43 +170,42 @@ public class LifeEngine {
         int alive = 0;
         ArrayList<Cell> n = new ArrayList<>();
         
-        if(right) {
-            n.add(map[x+1][y]); // right
-        }
-        if(left) {
-            n.add(map[x-1][y]); // left
-        }
-        
         if(y > 0 && y < map[0].length-1) {
             n.add(map[x][y+1]);         // up
             n.add(map[x][y-1]);         // down
             if(right) {
+                n.add(map[x+1][y]);     // right
                 n.add(map[x+1][y+1]);   // up - right
                 n.add(map[x+1][y-1]);   // down - right
             }
             if(left) {
+                n.add(map[x-1][y]);     // left
                 n.add(map[x-1][y+1]);   // up - left
                 n.add(map[x-1][y-1]);   // down - left
             }
         } else if(y == 0) {
             n.add(map[x][y+1]);         // up
             if(right) {
+                n.add(map[x+1][y]);     // right
                 n.add(map[x+1][y+1]);   // up - right
             }
             if(left) {
+                n.add(map[x-1][y]);     // left
                 n.add(map[x-1][y+1]);   // up - left
             }
         } else if(y == map[0].length -1) {
             n.add(map[x][y-1]);         // down
             if(right) {
+                n.add(map[x+1][y]);     // right
                 n.add(map[x+1][y-1]);   // down - right
             }
             if(left) {
+                n.add(map[x-1][y]);     // left
                 n.add(map[x-1][y-1]);   // down - left
             }
         }
         
-        for(Cell c : n) {               // check each cell is its alive
+        for(Cell c : n) {               // check each cell if its alive
             if(c.isAlive()) {
                 alive++;
             }

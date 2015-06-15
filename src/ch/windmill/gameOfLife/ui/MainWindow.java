@@ -248,7 +248,7 @@ public class MainWindow {
             btnRandom.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
             btnKill.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT));
             addStartAction(btnStart, btnKill);
-            addStopAction(btnStop, btnKill);
+            addStopAction(btnStop, btnKill, btnStart);
             addKillAction(btnKill);
             addRandomAction(btnRandom);
             
@@ -324,6 +324,7 @@ public class MainWindow {
                 evolveThread.start();
                 drawProcessStateText(ProcessState.RUNNING);
                 bDisable.setEnabled(false);
+                b.setEnabled(false);
             });
         }
         
@@ -331,12 +332,14 @@ public class MainWindow {
          * Add an actionlistener to stop the evolve thread.
          * @param b The button to add the actionlistener.
          * @param bEnable The button to enable when the button b is clicked.
+         * @param bEnable2 The button to enable when the button b is clicked.
          */
-        private void addStopAction(final JButton b, final JButton bEnable) {
+        private void addStopAction(final JButton b, final JButton bEnable, final JButton bEnable2) {
             b.addActionListener((ActionEvent e) -> {
                 evolveThread = null;
                 drawProcessStateText(ProcessState.STOPPED);
                 bEnable.setEnabled(true);
+                bEnable2.setEnabled(true);
             });
         }
         
