@@ -17,7 +17,7 @@ public class LifeEngine {
      * parameter <code>RuleSet.CORNWAY</code>.
      */
     public LifeEngine() {
-        this(RuleSet.CORNWAY);
+        this(RuleSet.CONWAY);
     }
     
     /**

@@ -38,10 +38,10 @@ public class MainWindow {
     private final static int BTNWIDTH = 150;
     private final static int BTNHEIGHT = 60;
     private final static int CELLSIZE = 2;
-    private final static int WAITTIME = 100;
     
     private final JFrame frame;
     private final World world;
+    private int delay;
     private Canvas canvas;
     private ControlPanel controlPanel;
     private Thread evolveThread;
@@ -61,10 +61,27 @@ public class MainWindow {
     public MainWindow() {
         frame = new JFrame("Game of life");
         world = new World(WIDTH, HEIGHT, CELLSIZE);
+        delay = 100;
         evolveThread = getEvolveThread();
         
         initUI();
         frame.setVisible(true);
+    }
+    
+    /**
+     * Set the delay time.
+     * @param delay Time in milliseconds.
+     */
+    public void setDelay(final int delay) {
+        this.delay = delay;
+    }
+    
+    /**
+     * Get the current delay time.
+     * @return The delay time.
+     */
+    public int getDelay() {
+        return delay;
     }
     
     /**
@@ -104,7 +121,7 @@ public class MainWindow {
         return evolveThread = new Thread(() -> {
             while(evolveThread == Thread.currentThread()) {
                 try {
-                    Thread.sleep(WAITTIME);
+                    Thread.sleep(delay);
                     world.startEngine();
                     controlPanel.incCounter();
                     controlPanel.drawAliveCellText(world.countAliveCells());
@@ -178,11 +195,12 @@ public class MainWindow {
      */
     private class ControlPanel extends JPanel {
         private JPanel pInfo;
-        private JLabel lblProcessState, lblGeneration, lblAliveCells, lblNumCells, lblPercentage, lblCellSize;
+        private JLabel lblProcessState, lblGeneration, lblAliveCells, lblNumCells, lblPercentage, lblCellSize,
+                lblDelay;
         private JButton btnStart, btnStop, btnKill, btnRandom;
         private JComboBox boxRules;
         private JSpinner spPercentageAlive;
-        private JSlider slCellSize;
+        private JSlider slCellSize, slDelay;
         private int generationCounter;
         
         /**
@@ -214,7 +232,7 @@ public class MainWindow {
          * @param n Number of alive cells.
          */
         public void drawAliveCellText(final int n) {
-            lblAliveCells.setText("Alive cells: "+n);
+            lblAliveCells.setText("Population: "+n);
             lblAliveCells.repaint();
         }
         
@@ -227,6 +245,7 @@ public class MainWindow {
             lblAliveCells = new JLabel();
             lblNumCells = new JLabel();
             lblGeneration = new JLabel();
+            lblDelay = new JLabel();
             lblPercentage = new JLabel(" live quote: ");
             lblCellSize  = new JLabel("Cell size (pixels): ");
             btnStart = new JButton("Start");
@@ -236,6 +255,7 @@ public class MainWindow {
             boxRules = new JComboBox(RuleSet.values());
             spPercentageAlive = new JSpinner();
             slCellSize = new JSlider(JSlider.HORIZONTAL);
+            slDelay = new JSlider(JSlider.HORIZONTAL);
             
             // set the text of the labels
             drawProcessStateText(ProcessState.STOPPED);
@@ -266,6 +286,14 @@ public class MainWindow {
             slCellSize.setSnapToTicks(true);
             slCellSize.addChangeListener(new SliderListener());
             
+            slDelay.setMinimum(10);
+            slDelay.setMaximum(1000);
+            slDelay.setValue(100);
+            slDelay.setMajorTickSpacing(10);
+            slDelay.setSnapToTicks(true);
+            slDelay.addChangeListener(new SliderDelayListener());
+            drawDelayText(slDelay.getValue());
+            
             // combobox
             boxRules.setPreferredSize(new Dimension(BTNWIDTH, BTNHEIGHT/2));
             
@@ -281,6 +309,8 @@ public class MainWindow {
             setLayout(new FlowLayout(FlowLayout.CENTER));
             setBorder(BorderFactory.createLineBorder(Color.black));
             add(pInfo);
+            add(lblDelay);
+            add(slDelay);
             add(lblCellSize);
             add(slCellSize);
             add(boxRules);
@@ -308,6 +338,15 @@ public class MainWindow {
         private void drawProcessStateText(final ProcessState state) {
             lblProcessState.setText("Engine state: "+state.getText());
             lblProcessState.repaint();
+        }
+        
+        /**
+         * Set the text of the process state label. Invoke the repaint method of the jlabel.
+         * @param millis The delay in milliseconds.
+         */
+        private void drawDelayText(final int millis) {
+            lblDelay.setText("Delay: "+millis+" millis");
+            lblDelay.repaint();
         }
         
         /**
@@ -358,7 +397,7 @@ public class MainWindow {
         }
         
         /**
-         * Add an actionlistener set a random generation. The random generation will override the existing 
+         * Add an actionlistener to generate a random generation. The random generation will override the existing 
          * generation. The generation counter will be reseted.
          * @param b The button to add the actionlistener.
          */
@@ -385,5 +424,17 @@ public class MainWindow {
             }
         }
         
+    }
+    
+    private class SliderDelayListener implements ChangeListener {
+        
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            JSlider s = (JSlider) e.getSource();
+            if(!s.getValueIsAdjusting()) {          // user doesnt move the cursor
+                setDelay(s.getValue());
+                controlPanel.drawDelayText(s.getValue());
+            }
+        }
     }
 }
